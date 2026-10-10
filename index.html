@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Marswalk</title>
+  <meta name="description" content="Plan a safe walk on Mars: pick a base, pick places to explore, and Marswalk finds the routes that get you home with air to spare.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="logo"><circle cx="12" cy="12" r="10" fill="#e47b44"/><path d="M5.5 15.5c2.5-3 4-.5 6.5-3.5s4-3 6.5-2.5" fill="none" stroke="#1a0e08" stroke-width="2" stroke-linecap="round" stroke-dasharray="2.6 2.4"/></svg>
+      <div>
+        <h1>Marswalk</h1>
+        <p class="tag">Plan a safe walk on Mars</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" id="btn-how">How it works</button>
+      <button class="btn" id="btn-example">Show example</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="mapwrap">
+      <div id="map" aria-label="Map of Jezero Crater, Mars"></div>
+
+      <div class="ui view-switch" role="group" aria-label="Map view">
+        <button class="seg" data-view="danger" aria-pressed="true">Danger map</button>
+        <button class="seg" data-view="science" aria-pressed="false">Science map</button>
+        <button class="seg" data-view="plain" aria-pressed="false">Plain</button>
+        <button class="seg" data-view="rover" aria-pressed="false" title="Show the path NASA's Perseverance rover drove">Rover path</button>
+      </div>
+
+      <div class="ui legend" id="legend"></div>
+      <div class="ui tip" id="tip" hidden></div>
+      <div class="ui toast" id="toast" hidden></div>
+
+      <div class="ui walkhud" id="walkhud" hidden>
+        <div class="wh-row">
+          <span class="wh-time" id="wh-time">0:00</span>
+          <span class="wh-doing" id="wh-doing">Leaving base</span>
+        </div>
+        <div class="air">
+          <div class="air-label"><span>Air left</span><b id="wh-air">5:00</b></div>
+          <div class="air-bar"><div class="air-fill" id="wh-fill"></div><div class="air-need" id="wh-need"></div></div>
+          <div class="air-note" id="wh-note">The white mark shows how much air you need to get home safely.</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <ol class="steps" aria-label="Steps">
+        <li data-step="1"><span>1</span>Base</li>
+        <li data-step="2"><span>2</span>Places</li>
+        <li data-step="3"><span>3</span>Routes</li>
+      </ol>
+
+      <div class="stage" id="stage-1" hidden>
+        <h2>Where is your base?</h2>
+        <p>Tap the map to set up base camp. Your walk starts and ends here.</p>
+        <div class="hint"><i class="dot easy"></i>Green ground is easy walking. Dark striped areas are too steep to walk on.</div>
+      </div>
+
+      <div class="stage" id="stage-2" hidden>
+        <h2>Where do you want to go?</h2>
+        <p>Tap up to 4 places to visit. Purple areas on the <b>Science map</b> are the most interesting rocks.</p>
+        <ul class="places" id="places"></ul>
+        <button class="btn primary big" id="btn-plan" disabled>Plan my walk</button>
+        <button class="btn link" id="btn-restart-2">Start over</button>
+      </div>
+
+      <div class="stage" id="stage-3" hidden>
+        <div class="example-note" id="example-note">This is an example walk near the Perseverance landing site. <button class="linkish" id="btn-own">Plan your own</button></div>
+        <h2>Pick a route</h2>
+        <p class="sub" id="routes-sub">Four ways to make the same trip.</p>
+        <div class="routes" id="routes"></div>
+        <button class="btn primary big" id="btn-watch">▶ Watch the walk</button>
+        <div class="suit">
+          <span>Suit air supply</span>
+          <div class="stepper">
+            <button id="air-minus" aria-label="Less air">−</button>
+            <b id="air-val">5 h</b>
+            <button id="air-plus" aria-label="More air">+</button>
+          </div>
+        </div>
+        <p class="fine">Times include 15 minutes of work at each place and keep 30 minutes of air in reserve.</p>
+        <div class="row-links">
+          <button class="btn link" id="btn-edit">Change places</button>
+          <button class="btn link" id="btn-restart-3">Start over</button>
+        </div>
+      </div>
+
+      <p class="footnote">Demo terrain modelled on Jezero Crater, where NASA's Perseverance rover landed.</p>
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="how" hidden role="dialog" aria-modal="true" aria-labelledby="how-title">
+  <div class="modal-card">
+    <button class="close" id="how-close" aria-label="Close">×</button>
+    <h2 id="how-title">How Marswalk works</h2>
+    <div class="how-grid">
+      <div><div class="how-ico">▦</div><h3>Mars, in squares</h3><p>The map is cut into 100 m squares. Each one is checked for steep slopes and loose sand, and for rocks worth studying, using the kind of data NASA's orbiters collect.</p></div>
+      <div><div class="how-ico">↝</div><h3>Four routes</h3><p>Like a GPS app, Marswalk finds the best path between your places, four ways: quickest, safest, most science, and balanced.</p></div>
+      <div><div class="how-ico">⌂</div><h3>Always get home</h3><p>The golden rule: at every step, the astronaut must be able to walk back to base with air to spare. Routes that break it turn red.</p></div>
+    </div>
+    <p class="fine">This demo runs on a model landscape shaped like Jezero Crater, built for the NASA Space Apps Challenge 2026. It is not real mission data.</p>
+    <button class="btn primary" id="how-go">Got it</button>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/routing.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

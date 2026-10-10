@@ -1,0 +1,14 @@
+{
+  "name": "Delta top and Seitah edge",
+  "habitat": 1035,
+  "stops": [
+    612,
+    1577
+  ],
+  "budget": {
+    "budget": 18000,
+    "reserve": 1800,
+    "dwell": 900
+  },
+  "start_lmst": 9.0
+}
